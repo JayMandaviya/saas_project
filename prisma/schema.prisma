@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum RoleName {
+  USER
+  MANAGER
+  ADMIN
+}
+
+enum NotificationType {
+  SYSTEM
+  SECURITY
+  ACCOUNT
+  BILLING
+  ALERT
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum FileUploadStatus {
+  PENDING
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+}
+
+enum StorageProvider {
+  LOCAL
+  S3
+  GCS
+  R2
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  UPLOAD
+  DOWNLOAD
+  VIEW
+  EXPORT
+  OTHER
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        RoleName @unique
+  displayName String
+  description String?
+  level       Int
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@index([level])
+  @@map("roles")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  roleId    String   @db.Uuid
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role          Role           @relation(fields: [roleId], references: [id])
+  notifications Notification[]
+  fileUploads   FileUpload[]
+  activityLogs  ActivityLog[]
+
+  @@index([email])
+  @@index([roleId])
+  @@index([isActive])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Notification {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @db.Uuid
+  type      NotificationType
+  status    NotificationStatus @default(UNREAD)
+  title     String
+  message   String             @db.Text
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type])
+  @@index([readAt])
+  @@map("notifications")
+}
+
+model FileUpload {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  filename        String
+  originalName    String
+  mimeType        String
+  sizeBytes       Int
+  storageProvider StorageProvider  @default(LOCAL)
+  storageKey      String           @unique
+  url             String?
+  status          FileUploadStatus @default(PENDING)
+  entityType      String?
+  entityId        String?          @db.Uuid
+  checksum        String?
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([mimeType])
+  @@map("file_uploads")
+}
+
+model ActivityLog {
+  id          String         @id @default(uuid()) @db.Uuid
+  userId      String?        @db.Uuid
+  action      ActivityAction
+  entityType  String
+  entityId    String?        @db.Uuid
+  description String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("activity_logs")
+}

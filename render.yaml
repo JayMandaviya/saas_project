@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: saas-admin-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build && npx prisma migrate deploy
+    startCommand: npm run start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: saas-admin-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  - name: saas-admin-db
+    plan: starter
+    databaseName: saas_admin
+    user: saas_admin
