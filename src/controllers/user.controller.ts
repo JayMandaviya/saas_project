@@ -60,7 +60,7 @@ export class UserController {
     });
   }
 
-  async getDashboardStats(req: Request, res: Response): Promise<void> {
+  async getDashboardStats(_req: Request, res: Response): Promise<void> {
     const stats = await userService.getDashboardStats();
 
     res.json({

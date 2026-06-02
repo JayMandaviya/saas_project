@@ -1,14 +1,15 @@
-import { Request, Response } from 'express'
+import type { Request, Response } from 'express'
 import { fileService } from '../services/file.service'
 
 export class FileController {
   async upload(req: Request, res: Response): Promise<void> {
-    if (!req.file) {
+    const file = req.file as Express.Multer.File | undefined
+    if (!file) {
       res.status(400).json({ success: false, message: 'Missing file upload' })
       return
     }
 
-    const upload = await fileService.saveUpload(req.file, req.user!.id)
+    const upload = await fileService.saveUpload(file, req.user!.id)
 
     res.status(201).json({
       success: true,

@@ -1,6 +1,5 @@
 import { ActivityAction, Prisma } from '../types/prisma'
 import { prisma } from '../lib/prisma'
-import { ApiError } from '../utils/ApiError'
 
 export interface ActivityQuery {
   page: number
@@ -30,7 +29,7 @@ export class ActivityService {
         entityType: payload.entityType,
         entityId: payload.entityId,
         description: payload.description,
-        metadata: payload.metadata,
+        metadata: payload.metadata as Prisma.InputJsonValue,
         ipAddress: payload.ipAddress,
         userAgent: payload.userAgent,
       },

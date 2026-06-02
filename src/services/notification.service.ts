@@ -1,4 +1,4 @@
-import { NotificationStatus, NotificationType } from '../types/prisma'
+import { NotificationStatus, NotificationType, Prisma } from '../types/prisma'
 import { prisma } from '../lib/prisma'
 import { sendEmail } from '../utils/email'
 
@@ -15,7 +15,7 @@ export class NotificationService {
     const { page, limit, search, status, type } = query
     const skip = (page - 1) * limit
 
-    const where: Parameters<typeof prisma.notification.findMany>[0]['where'] = {
+    const where: Prisma.NotificationWhereInput = {
       userId,
     }
 

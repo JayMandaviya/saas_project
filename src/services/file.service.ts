@@ -1,7 +1,6 @@
 import { ActivityAction, FileUploadStatus, StorageProvider } from '../types/prisma'
 import { prisma } from '../lib/prisma'
 import { activityService } from './activity.service'
-import type { Express } from 'express'
 
 export interface UploadFileResult {
   id: string
